@@ -74,12 +74,13 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:6px;borde
 <div class="small" style="margin-top:4px">1 người = Solo suy luận (bạn nhận 3 manh mối, tìm ô duy nhất trong 3 lần thử). 2–5 người = luật hỏi/tìm bình thường (luật gốc là 3–5, bản này mở thêm 2 người).</div>
 <div style="height:10px"></div><label>Loại ván</label>
 <select id="advSel"><option value="normal">Thường — chỉ manh mối khẳng định, 3 đá + 3 lều</option><option value="advanced">Nâng cao — có manh mối phủ định (“KHÔNG…”), 4 đá + 4 lều</option></select>
-<div style="height:10px"></div><label>Tên của bạn</label><input id="myName" value="Harper">
+<div style="height:10px"></div><label>Tên của bạn</label><input id="myName" value="Harper"><div style="height:10px"></div><label>🎲 Mã ván (seed) — chơi lại đúng một ván / gửi bạn bè chơi cùng ván</label><input id="seedInput" placeholder="Để trống = ngẫu nhiên"><div class="small" style="margin-top:4px">Nhập cùng một mã + cùng chế độ chơi/số người chơi = ra đúng cùng bản đồ và manh mối.</div>
 </div>
 <div id="setupRight"></div>
 </div>
 <div style="height:12px"></div><button onclick="startGame()" style="font-size:17px;padding:13px 22px">▶ Bắt đầu chơi</button> <button class="secondary" onclick="goOnlineSetup()" style="font-size:15px;padding:13px 16px">🌐 Chơi online với bạn bè</button>
 <p class="small">Bản đồ 108 ô (12×9) gồm 5 địa hình: Rừng, Sa mạc, Nước, Núi, Đầm lầy — cộng lãnh thổ Gấu / Báo sư tử rải rác thành nhiều cụm nhỏ và công trình Đá đứng / Lều hoang 4 màu. Mỗi ván máy sinh bản đồ + manh mối mới và <b>kiểm tra nghiệm duy nhất</b>: chỉ đúng 1 ô thỏa mọi manh mối.</p>
+<div id="setupExtras"></div>
 <div id="diffInfo"></div>
 </div>
 
@@ -96,6 +97,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:6px;borde
 <div class="game">
 <div>
 <div id="zoomBar"><span class="small" style="margin-right:auto">🔎 Kéo để di chuyển bàn cờ · cuộn chuột hoặc bấm nút để phóng to</span><button class="secondary zbtn" onclick="zoomBoard(0.78)">＋ Phóng to</button><button class="secondary zbtn" onclick="zoomBoard(1.28)">－ Thu nhỏ</button><button class="secondary zbtn" onclick="resetBoardView()">⟲ Vừa khung</button></div>
+<div id="seedLine" class="small" style="margin:2px 0 8px"></div>
 <div id="boardWrap"><svg id="board" viewBox="0 0 730 500" width="100%"></svg>
 <div class="legend">
 <span class="chip"><span style="display:inline-block;width:12px;height:12px;background:#1E9E4A;border:1px solid #000;border-radius:3px;vertical-align:middle"></span> 🌲 Rừng (chấm tròn)</span><span class="chip"><span style="display:inline-block;width:12px;height:12px;background:#FFD93D;border:1px solid #000;border-radius:3px;vertical-align:middle"></span> 🏜️ Sa mạc (chấm cát)</span><span class="chip"><span style="display:inline-block;width:12px;height:12px;background:#1A7FDB;border:1px solid #000;border-radius:3px;vertical-align:middle"></span> 💧 Nước (sóng)</span><span class="chip"><span style="display:inline-block;width:12px;height:12px;background:#A8A8A8;border:1px solid #000;border-radius:3px;vertical-align:middle"></span> ⛰️ Núi (tam giác)</span><span class="chip"><span style="display:inline-block;width:12px;height:12px;background:#795548;border:1px solid #000;border-radius:3px;vertical-align:middle"></span> 🟤 Đầm lầy (vạch ngang)</span>
@@ -148,6 +150,16 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:6px;borde
 <li><b>Khoảng cách:</b> 1 ô kề nhau = 1 bước; chính ô chứa yếu tố đó = 0 bước, nên “trong vòng 1 ô của Rừng” bao gồm cả chính các ô Rừng.</li>
 <li><b>Các loại manh mối:</b> (1) ở trên 1 trong 2 loại địa hình; (2) trong vòng 1 ô của 1 loại địa hình; (3) trong vòng 1 ô của lãnh thổ động vật (gấu hoặc báo); (4) trong vòng 2 ô của 1 loại công trình; (5) trong vòng 2 ô của 1 loại lãnh thổ; (6) trong vòng 3 ô của 1 màu công trình. Ván Nâng cao có thêm dạng phủ định “KHÔNG …” và đủ 4 công trình mỗi loại.</li>
 </ul><button onclick="closeRules()">Đóng</button></div></div>
+<div id="cellPopup" class="modal"><div>
+<h3 id="cpTitle" style="margin-top:0">Ô #1</h3>
+<p id="cpDesc" class="small"></p>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<button id="cpAsk" style="flex:1;min-width:140px;font-size:16px;padding:13px">❓ Hỏi về ô này</button>
+<button id="cpSearch" style="flex:1;min-width:140px;font-size:16px;padding:13px">🔎 Tìm kiếm tại ô này</button>
+</div>
+<div id="cpWhy" class="small" style="margin-top:8px"></div>
+<button class="secondary" style="margin-top:10px" onclick="closeCellPopup()">✕ Đóng</button>
+</div></div>
 <div id="cover"><div><div style="font-size:52px">🙈</div><h2 id="coverText"></h2><p class="small">Đừng để người chơi khác nhìn thấy màn hình.<br>Nhấn nút dưới đây khi người chơi này đã sẵn sàng.</p><button onclick="hideCover()" style="font-size:17px;padding:13px 22px">Tôi đã sẵn sàng — hiện bàn cờ</button></div></div>
 <script>
 const TERRAINS=['Rừng','Sa mạc','Nước','Núi','Đầm lầy'];
@@ -164,8 +176,14 @@ function center(i){let [r,c]=rc(i); return [SQ*SIZE*(c+0.5*(r&1))+34, 1.5*SIZE*r
 function hexPts(cx,cy){let p=[]; for(let k=0;k<6;k++){let a=Math.PI/180*(60*k-90); p.push((cx+SIZE*Math.cos(a)).toFixed(1)+','+(cy+SIZE*Math.sin(a)).toFixed(1))} return p.join(' ')}
 function hexVerts(cx,cy){let v=[]; for(let k=0;k<6;k++){let a=Math.PI/180*(60*k-90); v.push([cx+SIZE*Math.cos(a), cy+SIZE*Math.sin(a)]);} return v;}
 const TERR_COL={'Gấu':'#ff7a00','Báo':'#b45cff'}; const TERR_TINT={'Gấu':'#ff7a00','Báo':'#b45cff'}; const EDGE_NORM=[-60,0,60,120,180,-120];
-function shuffle(a){for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]} return a}
-function rnd(n){return Math.floor(Math.random()*n)}
+function shuffle(a){for(let i=a.length-1;i>0;i--){let j=Math.floor(RNG()*(i+1)); [a[i],a[j]]=[a[j],a[i]]} return a}
+function rnd(n){return Math.floor(RNG()*n)}
+let RNG=Math.random;
+function hashSeed(s){ let h=2166136261; s=String(s); for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
+function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function genGameSeeded(n,mode,seed){ RNG=mulberry32(hashSeed(seed)); try{ return genGame(n,mode); } finally { RNG=Math.random; } }
+function makeSeed(){ let chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s=''; for(let i=0;i<6;i++) s+=chars[Math.floor(Math.random()*chars.length)]; return s; }
+function currentSeedInput(){ let el=document.getElementById('seedInput'); return el? el.value.trim().toUpperCase() : ''; }
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 let G=null, showCand=false, selected=null, pendingSearchAlt=false; let NET=null;
 let onlineTurnTimeSec=30; function setTurnTime(v){ onlineTurnTimeSec=+v; }
@@ -275,7 +293,7 @@ function genBoard(mode){
             for(let c of all){ if(dist(s,c)<2){ blocked=true; break; } }
             if(blocked) continue;
             let minSeed=99; seeds.forEach(sd=>{ minSeed=Math.min(minSeed, dist(s,sd)); });
-            let score=minSeed + Math.random()*0.9;
+            let score=minSeed + RNG()*0.9;
             if(score>bestScore){ bestScore=score; bestSeed=s; }
           }
           if(bestSeed===null) continue;
@@ -427,6 +445,7 @@ function renderSetup(){
     el.innerHTML=`<label>Tên từng người chơi (theo thứ tự ngồi)</label>${names}<div class="small" style="margin-top:8px">${n===1?'🧩 <b>Solo suy luận:</b> chỉ 1 mình bạn, nhận 3 manh mối cùng lúc, tìm ô duy nhất trong 3 lần thử.':'Chế độ chuyền tay: trước mỗi lượt người, màn hình sẽ che lại để người trước không thấy manh mối của người sau. Máy không tham gia chế độ này.'}</div>`;
     diff.innerHTML='';
   }
+  if(typeof renderSetupExtras==='function') renderSetupExtras();
 }
 document.getElementById('pcount').addEventListener('change',renderSetup);
 function newGameSetup(){ clearHostTimer(); document.getElementById('setup').style.display='block'; document.getElementById('gameArea').style.display='none'; renderSetup(); }
@@ -517,7 +536,7 @@ function publicState(){
   return { board:G.board, adv:G.adv, mode:'online',
     players:G.players.map(p=>({name:p.name,color:p.color,pieces:p.pieces})),
     turn:G.turn, turnNo:G.turnNo, phase:G.phase, searchCell:G.searchCell, searchQueue:G.searchQueue||[],
-    over:G.over, winnerIdx:G.winner?G.players.indexOf(G.winner):null, lastQuestion:G.lastQuestion||null, questionCell:G.questionCell!==undefined?G.questionCell:null, questionSeq:G.questionSeq||0, turnStartedAt:G.turnStartedAt||null, askedCells:G.askedCells||[], turnTimeSec:G.turnTimeSec||30,
+    over:G.over, winnerIdx:G.winner?G.players.indexOf(G.winner):null, seed:G.seed||null, lastQuestion:G.lastQuestion||null, questionCell:G.questionCell!==undefined?G.questionCell:null, questionSeq:G.questionSeq||0, turnStartedAt:G.turnStartedAt||null, askedCells:G.askedCells||[], turnTimeSec:G.turnTimeSec||30,
     habitat:G.over?G.habitat:null, cluesReveal:G.over?(G.cluesReveal||G.players.map(p=>p.clue.text)):null,
     logEntries:G.logEntries||[] };
 }
@@ -541,7 +560,7 @@ function applyInit(data){
   let st=data.state;
   let players=st.players.map((sp,i)=>({name:sp.name,color:sp.color,isAI:false,diff:null,pieces:sp.pieces,clue: i===data.myIndex? {text:data.myClue.text, possible:data.myClue.possible} : {text:'(ẩn)', possible:Array(108).fill(true)}}));
   let pool=buildPool(st.board, st.adv);
-  G={mode:'online', adv:st.adv, board:st.board, pool, habitat:null, players, turn:st.turn, turnNo:st.turnNo, phase:st.phase, selected:null, pendingPenalty:null, pendingSearch:null, searchQueue:st.searchQueue||[], searchCell:st.searchCell, winner:null, over:false, logEntries:st.logEntries||[], askedCells:st.askedCells||[], turnStartedAt:st.turnStartedAt||null, questionSeq:st.questionSeq||0, lastQuestion:st.lastQuestion||null, questionCell:st.questionCell||null, turnTimeSec:st.turnTimeSec||30};
+  G={mode:'online', adv:st.adv, board:st.board, pool, habitat:null, players, turn:st.turn, turnNo:st.turnNo, phase:st.phase, selected:null, pendingPenalty:null, pendingSearch:null, searchQueue:st.searchQueue||[], searchCell:st.searchCell, winner:null, over:false, logEntries:st.logEntries||[], askedCells:st.askedCells||[], turnStartedAt:st.turnStartedAt||null, questionSeq:st.questionSeq||0, lastQuestion:st.lastQuestion||null, questionCell:st.questionCell||null, seed:st.seed||null, turnTimeSec:st.turnTimeSec||30};
   NET.myIndex=data.myIndex; NET.turnTimeSec=st.turnTimeSec||30;
   document.getElementById('setup').style.display='none'; document.getElementById('gameArea').style.display='block';
   let ld=document.getElementById('log'); if(ld) ld.innerHTML=(G.logEntries||[]).map(m=>`<div>${m}</div>`).join('');
@@ -554,9 +573,10 @@ function startOnlineGame(){
   let adv=document.getElementById('advSel').value;
   let ttSel=document.getElementById('turnTimeSel'); if(ttSel) onlineTurnTimeSec=+ttSel.value;
   let tt=onlineTurnTimeSec; if(NET) NET.turnTimeSec=tt;
-  let gen; try{ gen=genGame(names.length, adv); }catch(e){ alert(e.message); return; }
+  let seedVal=currentSeedInput()||makeSeed();
+  let gen; try{ gen=genGameSeeded(names.length, adv, seedVal); }catch(e){ alert(e.message); return; }
   let players=names.map((nm,i)=>({name:nm,color:PCOL[i],isAI:false,diff:null,clue:gen.clues[i],pieces:{}}));
-  G={mode:'online', adv, board:gen.board, pool:gen.pool, habitat:gen.habitat, players, turn:0, phase:'choose', selected:null, pendingPenalty:null, pendingSearch:null, searchQueue:[], searchCell:null, winner:null, turnNo:1, over:false, logEntries:[], askedCells:[], turnStartedAt:null, questionSeq:0, lastQuestion:null, questionCell:null, turnTimeSec:tt};
+  G={mode:'online', adv, board:gen.board, pool:gen.pool, habitat:gen.habitat, players, turn:0, phase:'choose', selected:null, pendingPenalty:null, pendingSearch:null, searchQueue:[], searchCell:null, winner:null, turnNo:1, over:false, logEntries:[], askedCells:[], turnStartedAt:null, questionSeq:0, lastQuestion:null, questionCell:null, seed:seedVal, turnTimeSec:tt};
   document.getElementById('setup').style.display='none'; document.getElementById('gameArea').style.display='block';
   let ld=document.getElementById('log'); if(ld) ld.innerHTML='';
   log(`🌐 Ván online bắt đầu: ${names.length} người chơi, chế độ ${adv==='advanced'?'Nâng cao':'Thường'}. ⏱️ Mỗi lượt ${tt} giây.`);
@@ -573,13 +593,14 @@ function startOnlineGame(){
 function startGame(){
   let mode=document.getElementById('modeSel').value, n=+document.getElementById('pcount').value, adv=document.getElementById('advSel').value;
   if(mode==='online'){ if(n===1){ alert('Chế độ 1 người là Solo, chơi offline — hãy chọn “Chơi với máy” hoặc “Chuyền tay” với 1 người. Online cần từ 2 người.'); return; } alert('Chế độ online: hãy bấm “Tạo phòng mới” hoặc nhập mã rồi “Vào phòng bằng mã” ở bên phải, rồi chủ phòng bấm “Bắt đầu ván online”.'); return; }
+  let seedVal=currentSeedInput()||makeSeed();
   if(n===1){
     // SOLO: 1 người chơi duy nhất, nhận 3 manh mối, tìm ô duy nhất trong 3 lần thử.
     let myName=document.getElementById('myName').value.trim()||'Harper';
-    let gen; try{ gen=genGame(3, adv); }catch(e){ alert(e.message); return; }
+    let gen; try{ gen=genGameSeeded(3, adv, seedVal); }catch(e){ alert(e.message); return; }
     let soloClues=gen.clues;
     let player={name:myName, color:PCOL[0], isAI:false, diff:null, clue:{text:soloClues.map(c=>c.text).join(' | '), possible:Array(108).fill(true)}, pieces:{}};
-    G={mode:'solo', adv, board:gen.board, pool:gen.pool, habitat:gen.habitat, players:[player], turn:0, phase:'choose', selected:null, pendingPenalty:null, pendingSearch:null, searchQueue:[], searchCell:null, winner:null, turnNo:1, over:false, coverFor:null, logEntries:[], askedCells:[], turnStartedAt:null, questionSeq:0, lastQuestion:null, questionCell:null, turnTimeSec:30, myMarks:{}, soloClues, soloFails:0, soloWrong:{}, aiMovesSinceHumanTurn:[]};
+    G={mode:'solo', adv, board:gen.board, pool:gen.pool, habitat:gen.habitat, players:[player], turn:0, phase:'choose', selected:null, pendingPenalty:null, pendingSearch:null, searchQueue:[], searchCell:null, winner:null, turnNo:1, over:false, coverFor:null, logEntries:[], askedCells:[], turnStartedAt:null, questionSeq:0, lastQuestion:null, questionCell:null, seed:seedVal, turnTimeSec:30, myMarks:{}, soloClues, soloFails:0, soloWrong:{}, aiMovesSinceHumanTurn:[]};
     markingMode=false; playerFilter=null;
     document.getElementById('setup').style.display='none'; document.getElementById('gameArea').style.display='block';
     document.getElementById('log').innerHTML='';
@@ -591,7 +612,7 @@ function startGame(){
   let myName=document.getElementById('myName').value.trim()||'Harper';
   let diff=document.getElementById('diffSel')?document.getElementById('diffSel').value:'hard';
   let gen;
-  try{ gen=genGame(n, adv); }catch(e){ alert(e.message); return; }
+  try{ gen=genGameSeeded(n, adv, seedVal); }catch(e){ alert(e.message); return; }
   let players=[];
   if(mode==='ai'){
     players.push({name:myName, color:PCOL[0], isAI:false, diff:null});
@@ -602,7 +623,7 @@ function startGame(){
     for(let i=0;i<n;i++) players.push({name:(inputs[i]?inputs[i].value.trim():('Người chơi '+(i+1)))||('Người chơi '+(i+1)), color:PCOL[i], isAI:false, diff:null});
   }
   players.forEach((p,i)=>{ p.clue=gen.clues[i]; p.pieces={}; p.cubesPlaced=0; });
-  G={mode, adv, board:gen.board, pool:gen.pool, habitat:gen.habitat, players, turn:0, phase:'choose', selected:null, pendingPenalty:null, pendingSearch:null, searchQueue:[], searchCell:null, winner:null, turnNo:1, over:false, coverFor:null, logEntries:[], askedCells:[], turnStartedAt:null, questionSeq:0, lastQuestion:null, questionCell:null, turnTimeSec:30, myMarks:{}, aiMovesSinceHumanTurn:[]};
+  G={mode, adv, board:gen.board, pool:gen.pool, habitat:gen.habitat, players, turn:0, phase:'choose', selected:null, pendingPenalty:null, pendingSearch:null, searchQueue:[], searchCell:null, winner:null, turnNo:1, over:false, coverFor:null, logEntries:[], askedCells:[], turnStartedAt:null, questionSeq:0, lastQuestion:null, questionCell:null, seed:seedVal, turnTimeSec:30, myMarks:{}, aiMovesSinceHumanTurn:[]};
   markingMode=false; playerFilter=null;
   document.getElementById('setup').style.display='none'; document.getElementById('gameArea').style.display='block';
   document.getElementById('log').innerHTML='';
@@ -743,6 +764,8 @@ function renderAll(){
   if(playerFilter!==null && G.players[playerFilter]) document.getElementById('boardHint').textContent = `👁️ Đang lọc: chỉ hiện cube/disc của ${G.players[playerFilter].name} trên bàn (bấm lại tên người đó ở khung Người chơi để hiện tất cả).`;
   else document.getElementById('boardHint').textContent = markingMode ? '🖍️ Chế độ đánh dấu: bấm vào ô để đổi đánh dấu (không có → loại trừ ✕ đỏ → nghi vấn viền xanh lá → không có). Đánh dấu không ảnh hưởng ván đấu. Bấm lại nút 🖍️ để tắt và chơi tiếp.' : (selected!==null? `Đã chọn ô #${selected+1} (${TERRAINS[G.board.terrain[selected]]}${G.board.territory[selected]?' · lãnh thổ '+G.board.territory[selected]:''}${G.board.structs[selected]?' · '+G.board.structs[selected].type+' màu '+G.board.structs[selected].color:''}).` : (G.phase==='choose' ? '👉 Bước 1: Nhấn vào 1 ô trên bản đồ để chọn, rồi chọn Hỏi/Tìm ở bên phải.' : 'Nhấn vào một ô trên bản đồ để chọn.'));
   renderBoard(); renderPlayers(); renderActions(); renderQuestionBanner(); renderRoomBanner();
+  if(typeof saveGame==='function') saveGame();
+  let sl=document.getElementById('seedLine'); if(sl) sl.innerHTML = G.seed? `🎲 Mã ván: <b>${esc(G.seed)}</b> <button class="secondary" onclick="copySeed()">📋 Copy mã ván</button> <span class="small">— gửi mã này + chọn cùng chế độ/số người để chơi lại đúng ván này.</span>` : '';
   let mb=document.getElementById('markBar'); if(mb) mb.style.display=(G.mode==='ai'||G.mode==='solo')?'block':'none';
   let amb=document.getElementById('aiMovesBox');
   if(amb){
@@ -917,7 +940,7 @@ function onCell(i){
   playSfx('click');
   if(NET && G.turn!==NET.myIndex) return;
   if(markingMode && (G.mode==='ai'||G.mode==='solo')){ cycleMark(i); return; }
-  if(['choose','qcell','scell','salt','penalty'].includes(G.phase)){ selected=i; renderAll(); }
+  if(['choose','qcell','scell','salt','penalty'].includes(G.phase)){ selected=i; renderAll(); if(G.phase==='choose' && typeof openCellPopup==='function' && isTouchUI()) openCellPopup(i); }
 }
 function confirmQCell(){
   if(selected===null||hasCube(selected)){ alert('Không được hỏi ô đã có cube.'); return; }
@@ -951,7 +974,7 @@ function doSearchStart(){
     if(cell===G.habitat){ winGame(p); return; }
     G.soloFails=(G.soloFails||0)+1; if(!G.soloWrong) G.soloWrong={}; G.soloWrong[cell]=true; playSfx('fail');
     log(`❌ Solo: ô #${cell+1} KHÔNG phải habitat. Bạn đã sai ${G.soloFails}/3 lần.`);
-    if(G.soloFails>=3){ G.over=true; G.winner=null; G.phase='over'; G.cluesReveal=G.players.map(x=>x.clue.text); G.soloLost=true; log(`💔 Hết 3 lần thử — Solo thua. Habitat là ô #${G.habitat+1}.`); renderAll(); showAllClues(); return; }
+    if(G.soloFails>=3){ G.over=true; G.winner=null; G.phase='over'; G.cluesReveal=G.players.map(x=>x.clue.text); G.soloLost=true; if(typeof recordEnd==='function') recordEnd('loss'); log(`💔 Hết 3 lần thử — Solo thua. Habitat là ô #${G.habitat+1}.`); renderAll(); showAllClues(); return; }
     renderAll(); return;
   }
   if(cell===null||hasCube(cell)||!p.clue.possible[cell]){ alert('Tìm kiếm phải chọn ô không có cube và CÓ THỂ là habitat theo clue của bạn.'); return; }
@@ -991,7 +1014,7 @@ function processSearchStep(){
   setTimeout(processSearchStep,500);
 }
 function winGame(p){
-  G.over=true; G.winner=p; G.phase='over'; G.cluesReveal=G.players.map(x=>x.clue.text); clearHostTimer(); playSfx('win');
+  G.over=true; G.winner=p; G.phase='over'; G.cluesReveal=G.players.map(x=>x.clue.text); clearHostTimer(); playSfx('win'); if(typeof recordEnd==='function') recordEnd(G.mode==='solo'?'win':(G.mode==='ai'?(p===G.players[0]?'win':'loss'):'played'));
   log(`🏆🏆 ${esc(p.name)} ĐÃ TÌM THẤY CRYPTID tại ô #${G.habitat+1}!`);
   renderAll(); if(NET && NET.isHost) broadcastState(); showAllClues();
 }
@@ -1261,4 +1284,88 @@ renderSetup();
 })();
 </script>
 
+
+<script>
+// ---------- CELL POPUP (dien thoai): cham 1 o -> hoi Hoi hay Tim kiem ----------
+function isTouchUI(){ try{ if(location.search.indexOf('cellpopup=1')>=0) return true; if(window.matchMedia && matchMedia('(pointer: coarse)').matches) return true; if(window.innerWidth<=980) return true; if(navigator.maxTouchPoints>0 && window.innerWidth<=1200) return true; }catch(e){} return false; }
+function openCellPopup(i){
+  if(!G||G.over||G.phase!=='choose') return;
+  let p=cur(); if(!p||p.isAI) return;
+  if(NET && G.turn!==NET.myIndex) return;
+  document.getElementById('cpTitle').textContent='Ô #'+(i+1)+' — bạn muốn làm gì?';
+  document.getElementById('cpDesc').textContent=cellDesc(i);
+  let ask=document.getElementById('cpAsk'), srch=document.getElementById('cpSearch'), why=document.getElementById('cpWhy');
+  if(G.mode==='solo'){
+    ask.style.display='none'; srch.disabled=hasCube(i);
+    why.textContent=hasCube(i)?'Ô này đã có cube nên không tìm được.':'Tìm đúng ô habitat thì thắng ngay, sai thì tính 1 lần thử.';
+  } else {
+    ask.style.display='';
+    let canQ=!hasCube(i) && G.players.some((q,idx)=> idx!==G.turn && !q.pieces[i]);
+    let canS=!hasCube(i) && !!p.clue.possible[i];
+    ask.disabled=!canQ; srch.disabled=!canS;
+    let w=[];
+    if(hasCube(i)) w.push('ô này đã có cube nên không hỏi/tìm được');
+    else { if(!canQ) w.push('mọi đối thủ đã có quân ở ô này nên không hỏi được ai'); if(!canS) w.push('ô này KHÔNG thể là habitat theo clue của bạn — chỉ hỏi được, không tìm được'); }
+    why.textContent=w.length?('⚠️ '+w.join(' • ')+'.'):'Hỏi: an toàn, không bị phạt. Tìm kiếm: thắng ngay nếu không ai đặt cube; nếu có người đặt cube, bạn bị phạt 1 cube.';
+  }
+  ask.onclick=function(){ closeCellPopup(); startQuestionFromCell(); };
+  srch.onclick=function(){ closeCellPopup(); doSearchStart(); };
+  document.getElementById('cellPopup').classList.add('open');
+}
+function closeCellPopup(){ let el=document.getElementById('cellPopup'); if(el) el.classList.remove('open'); }
+document.getElementById('cellPopup').addEventListener('click',function(e){ if(e.target===this) closeCellPopup(); });
+function copySeed(){
+  if(!G||!G.seed) return;
+  if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(G.seed).then(()=>alert('Đã copy mã ván: '+G.seed)).catch(()=>alert('Mã ván: '+G.seed)); }
+  else alert('Mã ván: '+G.seed);
+}
+
+// ---------- LUU VAN DANG DO (localStorage, chi che do offline) ----------
+let lastSaveAt=0;
+function saveGame(){
+  if(!G||G.over||NET||G.mode==='online') return;
+  let now=Date.now(); if(now-lastSaveAt<400) return; lastSaveAt=now;
+  try{
+    let copy=JSON.parse(JSON.stringify(G,function(k,v){ return (k==='hostTimerId'||k==='lastTickSecond')?undefined:v; }));
+    localStorage.setItem('cryptid_save', JSON.stringify({v:1, savedAt:now, G:copy}));
+  }catch(e){}
+}
+function clearSave(){ try{ localStorage.removeItem('cryptid_save'); }catch(e){} lastSaveAt=0; }
+function loadSave(){ try{ let s=localStorage.getItem('cryptid_save'); return s?JSON.parse(s):null; }catch(e){ return null; } }
+function resumeGame(){
+  let sv=loadSave(); if(!sv||!sv.G){ alert('Không có ván đang lưu.'); return; }
+  G=sv.G; selected=null; markingMode=false; playerFilter=null;
+  document.getElementById('setup').style.display='none'; document.getElementById('gameArea').style.display='block';
+  let ld=document.getElementById('log'); if(ld) ld.innerHTML=(G.logEntries||[]).map(m=>`<div>${m}</div>`).join('');
+  log('↩️ Đã khôi phục ván đang dở — lượt '+G.turnNo+', đến lượt '+(cur()?cur().name:'')+'.');
+  renderAll(); updateAudioButtons(); if(musicOn) startMusic();
+  if(G.phase==='searching'){ setTimeout(processSearchStep, 700); }
+  else { maybeCover(); runAI(); }
+}
+function discardSave(){ clearSave(); renderSetupExtras(); }
+
+// ---------- THONG KE THANG/THUA ----------
+function loadStats(){ try{ return JSON.parse(localStorage.getItem('cryptid_stats')||'null')||{played:0,wins:0,losses:0,soloPlayed:0,soloWins:0}; }catch(e){ return {played:0,wins:0,losses:0,soloPlayed:0,soloWins:0}; } }
+function recordEnd(result){
+  if(!G||G.endRecorded) return; G.endRecorded=true;
+  clearSave();
+  if(NET||G.mode==='online') return;
+  let st=loadStats(); st.played++;
+  if(G.mode==='solo'){ st.soloPlayed++; if(result==='win'){ st.soloWins++; st.wins++; } else if(result==='loss') st.losses++; }
+  else if(G.mode==='ai'){ if(result==='win') st.wins++; else if(result==='loss') st.losses++; }
+  try{ localStorage.setItem('cryptid_stats', JSON.stringify(st)); }catch(e){}
+}
+function renderSetupExtras(){
+  let el=document.getElementById('setupExtras'); if(!el) return;
+  let st=loadStats(), sv=loadSave(), h='';
+  if(sv&&sv.G&&sv.G.players){
+    h+=`<div style="margin-top:12px"><button type="button" onclick="resumeGame()">↩️ Tiếp tục ván đang dở (lượt ${sv.G.turnNo||1} — ${sv.G.players.map(p=>esc(p.name)).join(', ')})</button> <button type="button" class="secondary" onclick="discardSave()">🗑️ Bỏ ván đang lưu</button></div>`;
+  }
+  if(st.played>0){
+    h+=`<div class="small" style="margin-top:10px">📊 Thống kê của bạn: đã chơi xong <b>${st.played}</b> ván • thắng <b>${st.wins}</b> • thua <b>${st.losses}</b>${st.soloPlayed?` • 🧩 Solo: thắng ${st.soloWins}/${st.soloPlayed} ván`:''}</div>`;
+  }
+  el.innerHTML=h;
+}
+renderSetupExtras();
+</script>
 </body></html>
